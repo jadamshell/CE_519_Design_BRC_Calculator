@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Bioretention Design Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+    }
+    
+    .tabs {
+      overflow: hidden;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .tablinks {
+      background-color: #0033A0;
+      color: white;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 10px 20px;
+      transition: 0.3s;
+      font-size: 16px;
+    }
+    .tablinks:hover {
+      background-color: #1E8AFF;
+    }
+    .tablinks.active {
+      background-color: #1E8AFF;
+    }
+    .tabcontent {
+      display: none;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-top: none;
+      margin-bottom: 20px;
+    }
+    
+    .section {
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      padding: 10px;
+    }
+    .section h2 {
+      margin: 0;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+    }
+    .section-content {
+      display: block;
+      padding: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input,
+    select {
+      margin-bottom: 10px;
+      padding: 5px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .output {
+      margin-top: 10px;
+      font-weight: bold;
+      padding: 10px;
+      background-color: #e0f7fa;
+      border-radius: 4px;
+    }
+    .add-segment {
+      margin-top: 10px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    /* MAP STYLES */
+    #mapContainer {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #searchContainer {
+      position: absolute;
+      top: 20px;
+      left: 60px;
+      z-index: 1;
+    }
+    .frequency-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    #stormSelectionPanel {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bioretention Design Calculator</h1>
+
+  <!-- TOP-LEVEL TABS -->
+  <div class="tabs">
+    <button class="tablinks" onclick="openTab(event, 'WaterQuality')">Water Quality</button>
+    <button class="tablinks" onclick="openTab(event, 'PeakFlow')">Peak Flow</button>
+    <button class="tablinks" onclick="openTab(event, 'Underdrain')">Underdrain Configuration</button>
+  </div>
+
+  <!-- WATER QUALITY TAB -->
+  <div id="WaterQuality" class="tabcontent">
+    <!-- VR Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Water Quality Volume Required (VR)</h2>
+      <div class="section-content">
+        <form id="vrForm">
+          <label for="vr-area">Contributing Drainage Area (ft²):</label>
+          <input type="number" id="vr-area" step="any" min="0">
+          
+          <label for="vr-re">Required Rain Event (RE) in inches (min 0.6 in):</label>
+          <input type="number" id="vr-re" step="0.01" min="0.6" value="0.6">
+          
+          <label for="vr-i">Impervious Cover (I) (%) :</label>
+          <input type="number" id="vr-i" step="any" min="0" max="100">
+          
+          <button type="button" onclick="calculateVR()">Calculate VR</button>
+        </form>
+        <div class="output" id="vr-output">VR = ? ft³</div>
+      </div>
+    </div>
+
+    <!-- VP Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Water Quality Volume Provided (VP)</h2>
+      <div class="section-content">
+        <form id="vpForm">
+          <label for="vp-width">BRC Width (ft):</label>
+          <input type="number" id="vp-width" step="any" min="0">
+          
+          <label for="vp-length">BRC Length (ft):</label>
+          <input type="number" id="vp-length" step="any" min="0">
+          
+          <label for="vp-mediaDepth">Depth of Media (M) (ft):</label>
+          <input type="number" id="vp-mediaDepth" step="any" min="0">
+          
+          <label for="vp-porosity">Porosity of Media (p) (decimal, e.g., 0.40):</label>
+          <input type="number" id="vp-porosity" step="0.01" min="0" max="1" value="0.40">
+          
+          <label for="vp-ponding">Ponding Depth (P) (ft):</label>
+          <input type="number" id="vp-ponding" step="any" min="0">
+          
+          <button type="button" onclick="calculateVP()">Calculate VP</button>
+        </form>
+        <div class="output" id="vp-output">VP = ? ft³</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PEAK FLOW TAB -->
+  <div id="PeakFlow" class="tabcontent">
+    <!-- Weighted C–Factor Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Weighted C–Factor Calculation</h2>
+      <div class="section-content">
+        <div id="c-segments">
+          <div class="segment">
+            <h3>Segment 1</h3>
+            <label for="drainageType-1">Type of Drainage Area:</label>
+            <select id="drainageType-1" onchange="populateCoefficient('1')">
+              <option value="">--Select--</option>
+            </select>
+            <label for="area-1">Area (acres):</label>
+            <input type="number" id="area-1" step="0.1" min="0">
+            <label for="cvalue-1">Runoff Coefficient (C):</label>
+            <input type="number" id="cvalue-1" step="0.01" min="0" max="1" placeholder="Auto-filled or Manual Entry" readonly>
+          </div>
+        </div>
+        <button onclick="addCSegment()" class="add-segment">Add Segment</button>
+        <button onclick="calculateWeightedC()">Calculate Weighted C</button>
+        <div class="output" id="c-output">
+          <div>Weighted C = 0.00</div>
+          <div id="calculation-details" style="font-size: 0.9em; margin-top: 10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rainfall Intensity Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Rainfall Intensity</h2>
+      <div class="section-content">
+        <div id="stormSelectionPanel">
+          <h3>Rainfall Data Selection</h3>
+          <div class="frequency-inputs">
+            <div>
+              <label for="recurrenceInterval">Recurrence Interval:</label>
+              <select id="recurrenceInterval" onchange="updateRainfallDepth()">
+                <option value="">Select Recurrence Interval</option>
+                <option value="1">1-year</option>
+                <option value="2">2-year</option>
+                <option value="5">5-year</option>
+                <option value="10">10-year</option>
+                <option value="25">25-year</option>
+                <option value="50">50-year</option>
+                <option value="100">100-year</option>
+                <option value="200">200-year</option>
+                <option value="500">500-year</option>
+                <option value="1000">1000-year</option>
+              </select>
+            </div>
+            <div>
+              <label for="duration">Duration:</label>
+              <select id="duration" onchange="updateRainfallDepth()">
+                <option value="">Select Duration</option>
+                <option value="5-min">5-min</option>
+                <option value="10-min">10-min</option>
+                <option value="15-min">15-min</option>
+                <option value="30-min">30-min</option>
+                <option value="60-min">60-min</option>
+                <option value="2-hr">2-hr</option>
+                <option value="3-hr">3-hr</option>
+                <option value="6-hr">6-hr</option>
+                <option value="12-hr">12-hr</option>
+                <option value="24-hr">24-hr</option>
+                <option value="2-day">2-day</option>
+                <option value="3-day">3-day</option>
+                <option value="7-day">7-day</option>
+                <option value="10-day">10-day</option>
+                <option value="20-day">20-day</option>
+                <option value="30-day">30-day</option>
+                <option value="45-day">45-day</option>
+                <option value="60-day">60-day</option>
+              </select>
+            </div>
+          </div>
+          <div id="mapContainer">
+            <div id="searchContainer"></div>
+            <div id="map"></div>
+          </div>
+        </div>
+        <div id="storm-segments">
+          <div class="storm-segment">
+            <h3>Rainfall Event 1</h3>
+            <label for="rainfall-1">Rainfall (inches):</label>
+            <input type="number" id="rainfall-1" step="0.01" min="0" readonly>
+          </div>
+        </div>
+        <button onclick="addStormFrequency()" class="add-segment">Add Rainfall Event</button>
+        <button onclick="calculateStormIntensities()">Compute Intensities</button>
+        <div class="output" id="storm-output">
+          Intensity Calculations will appear here
+        </div>
+      </div>
+    </div>
+
+    <!-- Time of Concentration Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Time of Concentration</h2>
+      <div class="section-content">
+        <div id="flow-segments">
+          <div class="flow-segment">
+            <h3>Flow Segment 1</h3>
+            <label for="flow-type-1">Flow Type:</label>
+            <select id="flow-type-1" onchange="updateFlowInputs('1')">
+              <option value="sheet">Sheet Flow</option>
+              <option value="shallow">Shallow Concentrated Flow</option>
+              <option value="channel">Channel Flow</option>
+            </select>
+            <div id="flow-inputs-1">
+              <!-- Dynamic inputs for flow type -->
+            </div>
+          </div>
+        </div>
+        <button onclick="addFlowSegment()" class="add-segment">Add Flow Segment</button>
+        <button onclick="calculateTimeOfConcentration()">Calculate Tc</button>
+        <div class="output" id="tc-output">Time of Concentration = 0.0000 hr</div>
+      </div>
+    </div>
+
+    <!-- Rational Method Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Rational Method</h2>
+      <div class="section-content">
+        <form id="rationalForm">
+          <p style="font-size:0.9em;">
+            <strong>Q = C × I × A</strong><br>
+            Where:<br>
+            Q = Peak runoff (cfs),<br>
+            C = Weighted runoff coefficient,<br>
+            I = Rainfall intensity (in/hr),<br>
+            A = Drainage area (acres)
+          </p>
+          <div>
+            <label for="rational-drainageArea">Drainage Area (acres):</label>
+            <input type="number" id="rational-drainageArea" step="any" min="0">
+          </div>
+          <div>
+            <label for="rational-runoffCoefficient">Runoff Coefficient (C):</label>
+            <input type="number" id="rational-runoffCoefficient" step="0.01" min="0" max="1">
+          </div>
+          <div>
+            <label for="rational-timeOfConcentration">Time of Concentration (hr):</label>
+            <input type="number" id="rational-timeOfConcentration" step="0.01" min="0">
+          </div>
+          <div>
+            <label for="rational-intensity">Rainfall Intensity (in/hr):</label>
+            <input type="number" id="rational-intensity" step="0.01" min="0">
+          </div>
+          <button type="button" onclick="calculateRational()">Calculate Q</button>
+          <div class="output" id="rational-output">Q = ? cfs</div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNDERDRAIN CONFIGURATION TAB -->
+  <div id="Underdrain" class="tabcontent">
+    <!-- Media Outflow Rate Section (Darcy’s Law) -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Media Outflow Rate Calculation</h2>
+      <div class="section-content">
+        <form id="darcyForm">
+          <p style="font-size:0.9em;">
+            Calculate the flow rate through the media (Qₘ):<br>
+            Qₘ = (kₛₐₜ × A × (dh/dl)) / (12 × 3600)
+          </p>
+          <label for="darcy-ksat">Saturated Hydraulic Conductivity (kₛₐₜ) (in/hr):</label>
+          <input type="number" id="darcy-ksat" step="0.01" min="0">
+          
+          <label for="darcy-area">Cross-sectional Area (A) (ft²):</label>
+          <input type="number" id="darcy-area" step="any" min="0">
+          
+          <label for="darcy-gradient">Hydraulic Gradient (dh/dl) (ft/ft):</label>
+          <input type="number" id="darcy-gradient" step="0.01" min="0">
+          
+          <button type="button" onclick="calculateDarcy()">Calculate Flow Rate (Qₘ)</button>
+        </form>
+        <div class="output" id="darcy-output">Qₘ = ? ft³/s</div>
+      </div>
+    </div>
+
+    <!-- Ponding Zone Drain Time Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Ponding Zone Drain Time</h2>
+      <div class="section-content">
+        <form id="pondingForm">
+          <p style="font-size:0.9em;">
+            Calculate the Ponding Zone Drain Time (Tₚ):<br>
+            Tₚ = Vₚ / Qₘ
+          </p>
+          <label for="ponding-volume">Ponding Zone Volume (Vₚ) (ft³):</label>
+          <input type="number" id="ponding-volume" step="any" min="0">
+          <button type="button" onclick="calculatePonding()">Calculate Tₚ</button>
+        </form>
+        <div class="output" id="ponding-output">Tₚ = ? s</div>
+      </div>
+    </div>
+
+    <!-- Media Drain Time Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Media Drain Time</h2>
+      <div class="section-content">
+        <form id="mediaForm">
+          <p style="font-size:0.9em;">
+            Calculate the Media Drain Time (Tₛ):<br>
+            <br>Tₛ = (Vₘ × n) / Qₘ
+          </p>
+          <label for="media-area">Media Zone Area (ft²):</label>
+          <input type="number" id="media-area" step="any" min="0" placeholder="e.g., 775.36">
+          <label for="media-depth">Media Depth (ft):</label>
+          <input type="number" id="media-depth" step="any" min="0" placeholder="e.g., 3">
+          <label for="porosity">Porosity (n) (e.g., 0.45):</label>
+          <input type="number" id="porosity" step="0.01" min="0" max="1" value="0.45">
+          <button type="button" onclick="calculateMedia()">Calculate Tₛ</button>
+        </form>
+        <div class="output" id="media-output">Tₛ = ? s</div>
+      </div>
+    </div>
+
+    <!-- Total Drain Time Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Total Drain Time</h2>
+      <div class="section-content">
+        <button type="button" onclick="calculateTotalDrain()">Calculate Total Drain Time</button>
+        <div class="output" id="total-output">Tₜ = ? s</div>
+      </div>
+    </div>
+
+    <!-- Underdrain Size Calculation Section -->
+    <div class="section">
+      <h2 onclick="toggleSection(this)">Underdrain Size Calculation</h2>
+      <div class="section-content">
+        <form id="underdrainForm">
+          <p style="font-size:0.9em;">
+            Calculate the Underdrain Size using a Manning‐based equation:<br>
+            D = ((16 × Qₘ × n_pipe) / √S)^(3/8)<br>
+            where D = pipe diameter (ft), Qₘ = flow rate through the media (ft³/s), S = slope (ft/ft), and n_pipe is the Manning’s roughness coefficient for the pipe.<br>
+            A minimum diameter of 4 inches (0.333 ft) is enforced.
+          </p>
+          <label for="underdrain-slope">Slope of Underdrain Pipe (S) (ft/ft):</label>
+          <input type="number" id="underdrain-slope" step="0.001" min="0">
+          
+          <label for="underdrain-n">Manning's n (for pipe):</label>
+          <input type="number" id="underdrain-n" step="0.001" min="0" value="0.013">
+          
+          <button type="button" onclick="calculateUnderdrainSize()">Calculate Underdrain Size</button>
+        </form>
+        <div class="output" id="underdrain-output">Underdrain Size = ?</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://js.arcgis.com/4.31/"></script>
+  <script>
+    
+    // TAB FUNCTIONALITY
+    
+    function openTab(evt, tabName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+    // Open the first tab by default.
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementsByClassName("tablinks")[0].click();
+    });
+
+    
+    // Louisville MSD WATER QUALITY CALCULATIONS
+    
+    // VR: VR = (1/12) * RE * A * (0.05 + (0.009 * I))
+    function calculateVR() {
+      var A = parseFloat(document.getElementById("vr-area").value) || 0;
+      var RE = parseFloat(document.getElementById("vr-re").value) || 0;
+      var I = parseFloat(document.getElementById("vr-i").value) || 0;
+      var VR = (1/12) * RE * A * (0.05 + (0.009 * I));
+      document.getElementById("vr-output").innerHTML = "VR = " + VR.toFixed(2) + " ft³";
+    }
+    
+    // VP: VP = A*(M*p + P), where A = width * length
+    function calculateVP() {
+      var width = parseFloat(document.getElementById("vp-width").value) || 0;
+      var length = parseFloat(document.getElementById("vp-length").value) || 0;
+      var A = width * length;
+      var M = parseFloat(document.getElementById("vp-mediaDepth").value) || 0;
+      var p = parseFloat(document.getElementById("vp-porosity").value) || 0;
+      var P = parseFloat(document.getElementById("vp-ponding").value) || 0;
+      var VP = A * (M * p + P);
+      document.getElementById("vp-output").innerHTML = "VP = " + VP.toFixed(2) + " ft³";
+    }
+
+    
+    // PEAK FLOW CALCULATIONS
+    
+    // DR403 Runoff Coefficient Data
+    const runoffCoefficientData = {
+      "Downtown areas (0.70 - 0.95)": 0.85,
+      "Neighborhood areas (0.50 - 0.70)": 0.60,
+      "Industrial areas (0.50 - 0.90)": 0.70,
+      "Light commercial (0.50 - 0.80)": 0.65,
+      "Highways & roads (0.70 - 0.95)": 0.80,
+      "Parks / cemeteries (0.10 - 0.30)": 0.20,
+      "Multi-unit residential (0.60 - 0.75)": 0.68,
+      "Sandy soil lawns (0.05 - 0.15)": 0.10,
+      "Average residential (0.30 - 0.50)": 0.40,
+      "Business (0.50 - 0.95)": 0.70,
+      "Pavement / Concrete (0.90 - 1.00)": 0.95,
+      "Brick (0.70 - 0.85)": 0.77,
+      "Roofs (0.75 - 0.95)": 0.85
+    };
+
+    // Weighted C–Factor Functions
+    window.onload = function () {
+      populateDrainageTypeDropdown("drainageType-1");
+      updateFlowInputs("1"); // initialize first flow segment
+    };
+    function populateDrainageTypeDropdown(selectId) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">--Select--</option>';
+      for (let key in runoffCoefficientData) {
+        const option = document.createElement("option");
+        option.value = runoffCoefficientData[key];
+        option.text = key;
+        select.appendChild(option);
+      }
+    }
+    function populateCoefficient(segmentId) {
+      const drainageSelect = document.getElementById(`drainageType-${segmentId}`);
+      const cField = document.getElementById(`cvalue-${segmentId}`);
+      if (drainageSelect.value) {
+        cField.value = parseFloat(drainageSelect.value).toFixed(2);
+      }
+    }
+    function addCSegment() {
+      const container = document.getElementById("c-segments");
+      const segmentId = container.children.length + 1;
+      const newSegment = document.createElement("div");
+      newSegment.className = "segment";
+      newSegment.innerHTML = `
+        <h3>Segment ${segmentId}</h3>
+        <label for="drainageType-${segmentId}">Type of Drainage Area:</label>
+        <select id="drainageType-${segmentId}" onchange="populateCoefficient('${segmentId}')">
+          <option value="">--Select--</option>
+        </select>
+        <label for="area-${segmentId}">Area (acres):</label>
+        <input type="number" id="area-${segmentId}" step="0.1" min="0">
+        <label for="cvalue-${segmentId}">Runoff Coefficient (C):</label>
+        <input type="number" id="cvalue-${segmentId}" step="0.01" min="0" max="1" placeholder="Auto-filled or Manual Entry" readonly>
+      `;
+      container.appendChild(newSegment);
+      populateDrainageTypeDropdown(`drainageType-${segmentId}`);
+    }
+    function calculateWeightedC() {
+      const segments = document.getElementById("c-segments").children;
+      let totalArea = 0;
+      let totalProduct = 0;
+      let details = [];
+      let hasErrors = false;
+      for (let i = 0; i < segments.length; i++) {
+        const segNum = i + 1;
+        const areaVal = parseFloat(document.getElementById(`area-${segNum}`).value);
+        const cVal = parseFloat(document.getElementById(`cvalue-${segNum}`).value);
+        if (isNaN(areaVal) || areaVal <= 0) {
+          details.push(`Segment ${segNum}: Invalid area`);
+          hasErrors = true;
+          continue;
+        }
+        if (isNaN(cVal) || cVal < 0 || cVal > 1) {
+          details.push(`Segment ${segNum}: Invalid C value`);
+          hasErrors = true;
+          continue;
+        }
+        totalArea += areaVal;
+        totalProduct += (areaVal * cVal);
+        details.push(`Segment ${segNum}: Area=${areaVal.toFixed(2)}, C=${cVal.toFixed(2)}`);
+      }
+      if (hasErrors) {
+        document.getElementById("c-output").innerHTML = `
+          <div style="color:red;">Please correct the errors:</div>
+          <div>${details.join("<br>")}</div>
+        `;
+        return;
+      }
+      if (totalArea === 0) {
+        document.getElementById("c-output").innerHTML = `<div style="color:red;">Total area cannot be zero</div>`;
+        return;
+      }
+      const weightedC = totalProduct / totalArea;
+      window.weightedC = weightedC;
+      window.totalAreaAcres = totalArea;
+      document.getElementById("c-output").innerHTML = `
+        <div>Weighted C = ${weightedC.toFixed(3)}</div>
+        <div style="margin-top:10px; font-size:0.9em;">
+          ${details.join("<br>")}
+          <br>Total Area = ${totalArea.toFixed(2)} acres
+          <br>Sum(Area × C) = ${totalProduct.toFixed(3)}
+        </div>
+      `;
+    }
+
+    // Rainfall Intensity Functions
+    function convertDurationToHours(durationStr) {
+      switch (durationStr) {
+        case "5-min":   return 5.0/60.0;
+        case "10-min":  return 10.0/60.0;
+        case "15-min":  return 15.0/60.0;
+        case "30-min":  return 30.0/60.0;
+        case "60-min":  return 1.0;
+        case "2-hr":    return 2.0;
+        case "3-hr":    return 3.0;
+        case "6-hr":    return 6.0;
+        case "12-hr":   return 12.0;
+        case "24-hr":   return 24.0;
+        case "2-day":   return 48.0;
+        case "3-day":   return 72.0;
+        case "7-day":   return 168.0;
+        case "10-day":  return 240.0;
+        case "20-day":  return 480.0;
+        case "30-day":  return 720.0;
+        case "45-day":  return 1080.0;
+        case "60-day":  return 1440.0;
+        default:        return 1.0;
+      }
+    }
+    function updateRainfallDepth() {
+      if (!selectedPoint) {
+        console.log("No station selected yet.");
+        return;
+      }
+      const recurrenceInterval = document.getElementById("recurrenceInterval").value;
+      const duration = document.getElementById("duration").value;
+      if (!recurrenceInterval || !duration) {
+        console.log("Recurrence Interval or Duration not selected.");
+        return;
+      }
+      const query = {
+        where: `Station_name = '${selectedPoint.attributes.Station_name}' AND Duration = '${duration}' AND Recurrence_Interval = '${recurrenceInterval}-year'`,
+        outFields: ["*"]
+      };
+      Promise.all(featureLayers.map(layer => layer.queryFeatures(query)))
+        .then(results => {
+          let matchingRecord = null;
+          results.forEach(result => {
+            if (result.features && result.features.length > 0) {
+              matchingRecord = result.features[0];
+            }
+          });
+          if (matchingRecord) {
+            const depth = matchingRecord.attributes.Depth__in_;
+            console.log("Found depth:", depth);
+            if (depth !== undefined) {
+              document.getElementById("rainfall-1").value = depth;
+            } else {
+              throw new Error("Depth value not found in matching record");
+            }
+          } else {
+            throw new Error("No matching record found");
+          }
+        })
+        .catch(error => {
+          console.error("Error retrieving depth:", error);
+          document.getElementById("storm-output").innerHTML += `<div style="color: red;">No rainfall data available for ${duration} ${recurrenceInterval}-year storm</div>`;
+        });
+    }
+    function addStormFrequency() {
+      const container = document.getElementById("storm-segments");
+      const segmentId = container.children.length + 1;
+      const newSegment = document.createElement("div");
+      newSegment.className = "storm-segment";
+      newSegment.innerHTML = `
+        <h3>Rainfall Event ${segmentId}</h3>
+        <label for="rainfall-${segmentId}">Rainfall (inches):</label>
+        <input type="number" id="rainfall-${segmentId}" step="0.01" min="0" readonly>
+      `;
+      container.appendChild(newSegment);
+    }
+    function calculateStormIntensities() {
+      const container = document.getElementById("storm-segments");
+      const segments = container.children;
+      const duration = document.getElementById("duration").value;
+      if (!duration) {
+        document.getElementById("storm-output").innerHTML = `<div style="color: red;">Please select a duration first.</div>`;
+        return;
+      }
+      const durationHours = convertDurationToHours(duration);
+      let results = [];
+      window.intensities = [];
+      for (let i = 0; i < segments.length; i++) {
+        const segNum = i + 1;
+        const rainfallVal = parseFloat(document.getElementById(`rainfall-${segNum}`).value);
+        if (isNaN(rainfallVal) || rainfallVal <= 0) {
+          results.push(`Event ${segNum}: Invalid or zero rainfall.`);
+          window.intensities[i] = 0;
+          continue;
+        }
+        const intensity = rainfallVal / durationHours;
+        results.push(`Event ${segNum}: Rainfall=${rainfallVal.toFixed(2)} in, Duration=${duration}, Intensity=${intensity.toFixed(2)} in/hr`);
+        window.intensities[i] = intensity;
+      }
+      document.getElementById("storm-output").innerHTML = results.join("<br>");
+    }
+
+  
+    // Time of Concentration Functions
+    function updateFlowInputs(segmentId) {
+      const flowType = document.getElementById(`flow-type-${segmentId}`).value;
+      const inputsDiv = document.getElementById(`flow-inputs-${segmentId}`);
+      let inputsHTML = '';
+      switch(flowType) {
+        case 'sheet':
+          inputsHTML = `
+            <label for="length-${segmentId}">Flow Length (ft):</label>
+            <input type="number" id="length-${segmentId}" step="0.1" min="0">
+            <label for="slope-${segmentId}">Slope (ft/ft):</label>
+            <input type="number" id="slope-${segmentId}" step="0.001" min="0">
+            <label for="manning-${segmentId}">Manning's n:</label>
+            <select id="manning-${segmentId}">
+              <option value="0.011">Smooth Surface</option>
+              <option value="0.05">Fallow (no residue)</option>
+              <option value="0.17">Range (natural)</option>
+              <option value="0.15">Grass</option>
+              <option value="0.40">Woods (light underbrush)</option>
+              <option value="0.80">Woods (dense underbrush)</option>
+            </select>
+          `;
+          break;
+        case 'shallow':
+          inputsHTML = `
+            <label for="length-${segmentId}">Flow Length (ft):</label>
+            <input type="number" id="length-${segmentId}" step="0.1" min="0">
+            <label for="slope-${segmentId}">Slope (ft/ft):</label>
+            <input type="number" id="slope-${segmentId}" step="0.001" min="0">
+            <label for="surface-${segmentId}">Surface:</label>
+            <select id="surface-${segmentId}">
+              <option value="16.13">Paved</option>
+              <option value="15">Grassed Waterway</option>
+              <option value="13.17">Unpaved</option>
+            </select>
+          `;
+          break;
+        case 'channel':
+          inputsHTML = `
+            <label for="length-${segmentId}">Flow Length (ft):</label>
+            <input type="number" id="length-${segmentId}" step="0.1" min="0">
+            <label for="slope-${segmentId}">Slope (ft/ft):</label>
+            <input type="number" id="slope-${segmentId}" step="0.001" min="0">
+            <label for="velocity-${segmentId}">Average Velocity (ft/s):</label>
+            <input type="number" id="velocity-${segmentId}" step="0.1" min="0">
+          `;
+          break;
+      }
+      inputsDiv.innerHTML = inputsHTML;
+    }
+    function addFlowSegment() {
+      const container = document.getElementById("flow-segments");
+      const segmentId = container.children.length + 1;
+      const newSegment = document.createElement("div");
+      newSegment.className = "flow-segment";
+      newSegment.innerHTML = `
+        <h3>Flow Segment ${segmentId}</h3>
+        <label for="flow-type-${segmentId}">Flow Type:</label>
+        <select id="flow-type-${segmentId}" onchange="updateFlowInputs('${segmentId}')">
+          <option value="sheet">Sheet Flow</option>
+          <option value="shallow">Shallow Concentrated Flow</option>
+          <option value="channel">Channel Flow</option>
+        </select>
+        <div id="flow-inputs-${segmentId}"></div>
+      `;
+      container.appendChild(newSegment);
+      updateFlowInputs(segmentId.toString());
+    }
+    function calculateTimeOfConcentration() {
+      const segments = document.getElementById("flow-segments").children;
+      let totalTime = 0;
+      let details = [];
+      let hasErrors = false;
+      for (let i = 0; i < segments.length; i++) {
+        const segNum = i + 1;
+        const flowType = document.getElementById(`flow-type-${segNum}`).value;
+        const length = parseFloat(document.getElementById(`length-${segNum}`).value);
+        const slope = parseFloat(document.getElementById(`slope-${segNum}`).value);
+        if (isNaN(length) || length <= 0 || isNaN(slope) || slope <= 0) {
+          details.push(`Segment ${segNum}: Invalid length or slope`);
+          hasErrors = true;
+          continue;
+        }
+        let segmentTime = 0;
+        switch(flowType) {
+          case 'sheet':
+            const manning = parseFloat(document.getElementById(`manning-${segNum}`).value);
+            segmentTime = (0.007 * Math.pow(manning * length, 0.8)) / Math.pow(slope, 0.4);
+            break;
+          case 'shallow':
+            const surfaceVal = parseFloat(document.getElementById(`surface-${segNum}`).value);
+            const shallowVel = surfaceVal * Math.sqrt(slope);
+            segmentTime = length / (3600 * shallowVel);
+            break;
+          case 'channel':
+            const channelVel = parseFloat(document.getElementById(`velocity-${segNum}`).value);
+            if (isNaN(channelVel) || channelVel <= 0) {
+              details.push(`Segment ${segNum}: Invalid velocity`);
+              hasErrors = true;
+              continue;
+            }
+            segmentTime = length / (3600 * channelVel);
+            break;
+        }
+        totalTime += segmentTime;
+        details.push(`Segment ${segNum} (${flowType}): ${segmentTime.toFixed(3)} hr`);
+      }
+      window.tc = totalTime;
+      document.getElementById("tc-output").innerHTML = hasErrors
+        ? `<div style="color: red;">Errors found:</div><div>${details.join('<br>')}</div>`
+        : `<div>Total Time of Concentration = ${totalTime.toFixed(3)} hours</div>
+           <div style="margin-top: 10px; font-size:0.9em;">${details.join('<br>')}</div>`;
+    }
+
+    // Rational Method Functions
+    function autoPopulateRational() {
+      if (window.totalAreaAcres) {
+        document.getElementById("rational-drainageArea").value = window.totalAreaAcres.toFixed(2);
+      }
+      if (window.weightedC) {
+        document.getElementById("rational-runoffCoefficient").value = window.weightedC.toFixed(2);
+      }
+      if (window.tc) {
+        document.getElementById("rational-timeOfConcentration").value = window.tc.toFixed(3);
+      }
+      if (window.intensities && window.intensities.length > 0) {
+        document.getElementById("rational-intensity").value = window.intensities[0].toFixed(2);
+      }
+    }
+    function calculateRational() {
+      const A = parseFloat(document.getElementById("rational-drainageArea").value) || 0;
+      const C = parseFloat(document.getElementById("rational-runoffCoefficient").value) || 0;
+      const I = parseFloat(document.getElementById("rational-intensity").value) || 0;
+      if (A <= 0 || C <= 0 || I <= 0) {
+        document.getElementById("rational-output").innerHTML = `<div style="color:red;">Please ensure valid inputs for A, C, and I.</div>`;
+        return;
+      }
+      const Q = C * I * A;
+      document.getElementById("rational-output").innerHTML = `Q = ${Q.toFixed(2)} cfs`;
+    }
+
+  
+    // UNDERDRAIN CONFIGURATION CALCULATIONS
+    let globalQm = 0;
+    // Flow rate through media: Qₘ = (k_sat * A * (dh/dl)) / (12 * 3600)
+    function calculateDarcy() {
+      let ksat = parseFloat(document.getElementById("darcy-ksat").value) || 0;
+      let area = parseFloat(document.getElementById("darcy-area").value) || 0;
+      let gradient = parseFloat(document.getElementById("darcy-gradient").value) || 0;
+      globalQm = (ksat * area * gradient) / (12 * 3600);
+      if (globalQm <= 0) {
+         document.getElementById("darcy-output").innerHTML = `<div style="color:red;">Invalid Qₘ (flow rate). Check your inputs.</div>`;
+         return;
+      }
+      document.getElementById("darcy-output").innerHTML = `Qₘ = ${globalQm.toFixed(6)} ft³/s`;
+    }
+    
+    // Ponding Zone Drain Time: Tₚ = Vₚ / Qₘ
+    function calculatePonding() {
+      if (globalQm <= 0) {
+        document.getElementById("ponding-output").innerHTML = `<div style="color:red;">Please calculate Qₘ first.</div>`;
+        return;
+      }
+      let pondingVolume = parseFloat(document.getElementById("ponding-volume").value) || 0;
+      let Tp = pondingVolume / globalQm;
+      document.getElementById("ponding-output").innerHTML = `Tₚ = ${Tp.toFixed(2)} s`;
+      window.Tp = Tp;
+    }
+    
+    // Media Drain Time: Tₛ = (Vₘ × n) / Qₘ
+    function calculateMedia() {
+      if (globalQm <= 0) {
+        document.getElementById("media-output").innerHTML = `<div style="color:red;">Please calculate Qₘ first.</div>`;
+        return;
+      }
+      let mediaArea = parseFloat(document.getElementById("media-area").value) || 0;
+      let mediaDepth = parseFloat(document.getElementById("media-depth").value) || 0;
+      let porosity = parseFloat(document.getElementById("porosity").value) || 0;
+      let mediaVolume = mediaArea * mediaDepth;
+      let Ts = (mediaVolume * porosity) / globalQm;
+      document.getElementById("media-output").innerHTML = `Tₛ = ${Ts.toFixed(2)} s`;
+      window.Ts = Ts;
+    }
+    
+    // Total Drain Time: Tₜ = Tₚ + Tₛ
+    function calculateTotalDrain() {
+      if (typeof window.Tp === "undefined" || typeof window.Ts === "undefined") {
+        document.getElementById("total-output").innerHTML = `<div style="color:red;">Please calculate both Tₚ and Tₛ first.</div>`;
+        return;
+      }
+      let Tt = window.Tp + window.Ts;
+      let hours = Tt / 3600;
+      let maxSeconds = 36 * 3600;
+      let warning = "";
+      if (Tt > maxSeconds) {
+          warning = `<br><span style="color:red;">Warning: Total drain time exceeds 36 hours.</span>`;
+      }
+      document.getElementById("total-output").innerHTML = `Tₜ = ${Tt.toFixed(2)} s (${hours.toFixed(2)} hr)${warning}`;
+    }
+    
+    // Underdrain Size Calculation using Manning‐based Equation:
+    // D = ((16 * Qₘ * n_pipe) / sqrt(S))^(3/8)
+    // Minimum diameter is 4 inches (0.333 ft)
+    function calculateUnderdrainSize() {
+      if (globalQm <= 0) {
+        document.getElementById("underdrain-output").innerHTML = `<div style="color:red;">Please calculate Qₘ  first.</div>`;
+        return;
+      }
+      var S = parseFloat(document.getElementById("underdrain-slope").value);
+      var n_pipe = parseFloat(document.getElementById("underdrain-n").value);
+      if (isNaN(S) || S <= 0 || isNaN(n_pipe) || n_pipe <= 0) {
+        document.getElementById("underdrain-output").innerHTML = `<div style="color:red;">Please enter valid values for Slope and Manning's n.</div>`;
+        return;
+      }
+      var value = (16 * globalQm * n_pipe) / Math.sqrt(S);
+      var D = Math.pow(value, 3/8); // Diameter in feet
+      // Enforce minimum diameter of 4 inches (0.333 ft)
+      if (D < 0.3333) {
+        D = 0.3333;
+      }
+      var D_inch = D * 12;
+      document.getElementById("underdrain-output").innerHTML = `Underdrain pipe diameter required = ${D.toFixed(3)} ft (${D_inch.toFixed(1)} inches)`;
+    }
+
+
+    // ARCGIS MAPPING AND PFDS SEARCH SETUP
+    let view, graphicsLayer, selectedPoint;
+    let featureLayers = [];
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Search",
+      "esri/Graphic"
+    ], function (Map, MapView, FeatureLayer, GraphicsLayer, Search, Graphic) {
+      const map = new Map({
+        basemap: "topo-vector"
+      });
+      view = new MapView({
+        container: "map",
+        map: map,
+        center: [-85, 37.5],
+        zoom: 7,
+        constraints: { snapToZoom: true }
+      });
+      for (let i = 0; i <= 221; i++) {
+        const layer = new FeatureLayer({
+          url: `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/NOAA_PFDS_Stations_WFL1/FeatureServer/${i}`,
+          outFields: ["*"]
+        });
+        featureLayers.push(layer);
+        map.add(layer);
+      }
+      graphicsLayer = new GraphicsLayer();
+      map.add(graphicsLayer);
+      const search = new Search({
+        view: view,
+        container: "searchContainer",
+        popupEnabled: false
+      });
+      view.on("click", function (event) {
+        handleLocationSelection(event.mapPoint);
+      });
+      search.on("select-result", function (event) {
+        if (event.result && event.result.feature) {
+          handleLocationSelection(event.result.feature.geometry);
+        }
+      });
+      view.when(() => {
+        view.container.style.height = "100%";
+      });
+    });
+    function handleLocationSelection(point) {
+      graphicsLayer.removeAll();
+      document.getElementById("storm-output").innerHTML = `<div>Finding nearest rainfall station...</div>`;
+      require(["esri/Graphic"], function (Graphic) {
+        const marker = new Graphic({
+          geometry: point,
+          symbol: {
+            type: "simple-marker",
+            color: [226, 119, 40],
+            outline: { color: [255, 255, 255], width: 2 }
+          }
+        });
+        graphicsLayer.add(marker);
+      });
+      const nearestQuery = {
+        geometry: point,
+        outFields: ["*"],
+        returnGeometry: true,
+        spatialRel: "esriSpatialRelIntersects",
+        outSpatialReference: view.spatialReference,
+        where: "1=1",
+        num: 1,
+        distance: 50,
+        units: "miles"
+      };
+      Promise.all(featureLayers.map(layer => layer.queryFeatures(nearestQuery)))
+        .then(results => {
+          let closestStation = null;
+          let shortestDistance = Infinity;
+          results.forEach(result => {
+            if (result.features && result.features.length > 0) {
+              const feature = result.features[0];
+              const dx = feature.geometry.x - point.x;
+              const dy = feature.geometry.y - point.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestStation = feature;
+              }
+            }
+          });
+          if (closestStation) {
+            selectedPoint = closestStation;
+            const stationName = selectedPoint.attributes.Station_name || 'Unknown Station';
+            document.getElementById("storm-output").innerHTML = `<div>Found nearest station: ${stationName}</div>`;
+            updateRainfallDepth();
+          } else {
+            document.getElementById("storm-output").innerHTML = `<div style="color: red;">No rainfall stations found within 50 miles</div>`;
+          }
+        })
+        .catch(error => {
+          console.error("Error finding station:", error);
+          document.getElementById("storm-output").innerHTML = `<div style="color: red;">Error finding rainfall station</div>`;
+        });
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
